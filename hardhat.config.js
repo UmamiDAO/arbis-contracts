@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
+const { expect } = require("chai");
 
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -36,15 +37,14 @@ task("deploy-sushi-farm", "Deploys a new Sushi farm strategy")
   .setAction(async (taskArgs, hre) => {
     console.log("Creating farm with params: ", taskArgs);
 
-    // SLP deposit token: 0xb6dd51d5425861c808fd60827ab6cfbffe604959
     const sushiToken = "0xd4d42F0b6DEF4CE0383636770eF773390d85c61A";
 
     const SushiLPFarmStrategyFactory = await ethers.getContractFactory("SushiLPFarmStrategyFactory");
     const factory = await SushiLPFarmStrategyFactory.attach(taskArgs.factory);
 
-    console.log("Factory instance: ", factory);
+    const numFarms = await factory.farmsCount();
 
-    let res = factory.addFarm(
+    await factory.addFarm(
       taskArgs.name,
       taskArgs.symbol,
       taskArgs.depositToken,
@@ -54,7 +54,11 @@ task("deploy-sushi-farm", "Deploys a new Sushi farm strategy")
       taskArgs.pid
     );
 
-    console.log("Farm res: ", res);
+    const newNumFarms = await factory.farmsCount();
+    expect(newNumFarms, "Farm wasn't added").to.equal(numFarms + 1);
+
+    const farmAddr = await factory.farms(newNumFarms - 1);
+    console.log("Strategy deployed at ", farmAddr);
   });
 
 /**
