@@ -17,9 +17,10 @@ All contracts are unaudited, standard yield farming risks apply.
 | PonzuStrategy | [0x7a20ee66ca1696d516c1bb780ae153ee1de36b24](https://arbiscan.io/address/0x7a20ee66ca1696d516c1bb780ae153ee1de36b24)|
 | ApeStrategy | [0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A](https://arbiscan.io/address/0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A)|
 | ApeStrategy | [0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A](https://arbiscan.io/address/0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A)|
-| SushiLPFarmStrategyFactory | [0xCFdA66EA159D38F362F8595c255E543c184Ef20b](https://arbiscan.io/address/0xCFdA66EA159D38F362F8595c255E543c184Ef20b)|
+| SushiLPFarmStrategyFactory | [0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB](https://arbiscan.io/address/0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB)|
 
 ## Factory Created Contract Addresses
 There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy instances), view it for source code and abi information
 
-| USDCETHStrategy | [0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703](https://arbiscan.io/address/0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703)|
+| MIMETHStrategy | [0x1F65a3437800CcA4d1e169FE5Df49b809ef5830D](https://arbiscan.io/address/0x1F65a3437800CcA4d1e169FE5Df49b809ef5830D)| 
+| USDCETHStrategy | [0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703](https://arbiscan.io/address/0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703)| (deployed from factory 0xCFdA66EA159D38F362F8595c255E543c184Ef20b)
