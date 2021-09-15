@@ -4,7 +4,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-const { expect } = require("chai");
+const { assert, expect } = require("chai");
 
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -43,6 +43,7 @@ task("deploy-sushi-farm", "Deploys a new Sushi farm strategy")
     const factory = await SushiLPFarmStrategyFactory.attach(taskArgs.factory);
 
     const numFarms = await factory.farmsCount();
+    console.log("Number of existing farms: ", numFarms.toString());
 
     await factory.addFarm(
       taskArgs.name,
@@ -55,7 +56,7 @@ task("deploy-sushi-farm", "Deploys a new Sushi farm strategy")
     );
 
     const newNumFarms = await factory.farmsCount();
-    expect(newNumFarms, "Farm wasn't added").to.equal(numFarms + 1);
+    assert(newNumFarms.eq(newNumFarms.add(1)), "Farm wasn't added");
 
     const farmAddr = await factory.farms(newNumFarms - 1);
     console.log("Strategy deployed at ", farmAddr);
@@ -79,6 +80,7 @@ module.exports = {
       url: process.env.ARBITRUM_MAINNET_URL,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gas: 8578000,
     }
   },
   gasReporter: {
