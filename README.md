@@ -16,7 +16,6 @@ All contracts are unaudited, standard yield farming risks apply.
 | PongStrategy | [0xE74E9f3B9F862B7707531ABF425621F53050A7ec](https://arbiscan.io/address/0xE74E9f3B9F862B7707531ABF425621F53050A7ec)|
 | PonzuStrategy | [0x7a20ee66ca1696d516c1bb780ae153ee1de36b24](https://arbiscan.io/address/0x7a20ee66ca1696d516c1bb780ae153ee1de36b24)|
 | ApeStrategy | [0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A](https://arbiscan.io/address/0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A)|
-| ApeStrategy | [0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A](https://arbiscan.io/address/0xAb4Bf76a278FD67C649b41Dd8f349Ec87cd2621A)|
 | SushiLPFarmStrategyFactory | [0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB](https://arbiscan.io/address/0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB)|
 
 ## Factory Created Contract Addresses
