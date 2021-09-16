@@ -67,7 +67,7 @@ contract SushiLPFarmStrategy is ERC20, Ownable, IStrategy {
     token0 = IERC20(_token0);
     token1 = IERC20(_token1);
     
-    feeDestination = msg.sender;
+    feeDestination = tx.origin;
 
     setAllowances();
     emit Reinvest(0, 0);
