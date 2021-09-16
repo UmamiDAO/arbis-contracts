@@ -44,14 +44,19 @@ contract stARBIS is ERC20, Ownable, ReentrancyGuard {
     arbisToken.approve(address(stakingContract), amount);
   }
 
-  function addReward(uint256 amount) external {
-    windows[currentWindow].rewardsInWindow += amount;
+  function addReward() external payable {
+    windows[currentWindow].rewardsInWindow += msg.value;
   }
 
   function stake(uint256 amount) external nonReentrant {
-    require(amount > 0, "Can't deposit nothing");  
+    require(amount > 0, "Invalid stake amount");
+
+    // Transfer ARBIS to staking contract
     stakingContract.stakeFor(msg.sender, uint128(amount));
+
+    // Mint stARBIS
     _mint(msg.sender, amount);
+
     incrementWindow(true, amount);
     stakeBalanceAt[msg.sender][currentWindow] = balanceOf(msg.sender);
   }
@@ -62,9 +67,8 @@ contract stARBIS is ERC20, Ownable, ReentrancyGuard {
     windows[currentWindow] = newWindow;
   }
 
-
   function withdraw(uint256 amount) public nonReentrant {
-    require(amount > 0, "Invalid amount");
+    require(amount > 0, "Invalid withdraw amount");
 
     // Burn stARBIS
     _burn(msg.sender, amount);
@@ -80,15 +84,16 @@ contract stARBIS is ERC20, Ownable, ReentrancyGuard {
       if (i > startIdx && windows[i].eventAddress == msg.sender) {
         uint256 eventAmount = windows[i].eventAmount;
         if (windows[i].eventIsDeposit) {
-          // Deposit
+          // Deposit - stake was increased
           amountStaked += eventAmount;
         }
         else {
-          // Withdrawal
+          // Withdrawal - stake was decreased
           amountStaked -= eventAmount;
         }
       }
 
+      // Calculate share of rewards in this window based on pool share at the time.
       uint256 windowRewards = windows[i].rewardsInWindow;
       uint256 windowTotalSupply = windows[i].totalSupplyAtWindow;
       uint256 sharedRewards = (windowRewards * balanceOf(msg.sender) * 10000) / (windowTotalSupply * 10000);
