@@ -1,0 +1,46 @@
+[
+    {
+        "name": "Big test",
+        "actions": [
+            { "type": "reward", "amount": "7" },
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "reward", "amount": "1" },
+            { "type": "reward", "amount": "2" },
+            { "type": "reward", "amount": "3" },
+            { "type": "stake", "account": 1, "amount": "150" },
+            { "type": "reward", "amount": "4" },
+            { "type": "reward", "amount": "5" },
+            { "type": "stake", "account": 2, "amount": "300" },
+            { "type": "reward", "amount": "2" },
+            { "type": "reward", "amount": "2" },
+            { "type": "collect", "account": 1, "expect": "5.5" },
+            { "type": "collect", "account": 1, "expect": "0" },
+            { "type": "reward", "amount": "10" },
+            { "type": "collect", "account": 0, "expect": "14" },
+            { "type": "withdraw", "account": 0, "amount": "150" },
+            { "type": "stake", "account": 2, "amount": "50" },
+            { "type": "reward", "amount": "100" },
+            { "type": "withdraw", "account": 1, "amount": "150", "expect": "30" }
+        ]
+    },
+    {
+        "name": "Pay rewards when no remaining stake",
+        "actions": [
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "reward", "amount": "1" },
+            { "type": "withdraw", "account": 0, "amount": "150" }
+        ]
+    },
+    {
+        "name": "No stake while rewards",
+        "actions": [
+            { "type": "reward", "amount": "1" },
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "withdraw", "account": 0, "amount": "150" },
+            { "type": "reward", "amount": "3" },
+            { "type": "reward", "amount": "7" },
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "collect", "account": 0, "amount": "150", "expect": "0" }
+        ]
+    }
+]
