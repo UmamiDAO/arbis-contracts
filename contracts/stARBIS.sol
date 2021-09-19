@@ -1,142 +1,228 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
+
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// import "contracts/StakedTokenWrapper.sol";
-import "contracts/staking/StakedTokenHolder.sol";
+contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
+  using SafeERC20 for IERC20;
 
-
-contract stARBIS is ERC20, Ownable, ReentrancyGuard {
   IERC20 public immutable arbisToken;
-  mapping(address => mapping(uint256 => uint256)) private stakeBalanceAt;
-  mapping(address => uint256) private claimedUpToAndExcluding;
-  mapping(uint256 => Window) private windows;
-  mapping(address => uint256) public stakeBalances;
-  uint256 currentWindow = 0;
-  uint256 totalStaked = 0;
+  
+  uint256 public totalStaked = 0;
+  address payable public feeDestination;
+  uint256 public earlyWithdrawalFee = 0;
+  uint256 public earlyWithdrawalDistributeShare = 0;
+  uint256 public earlyWithdrawalSecondsThreshold = 0;
+  address payable[] stakeholders;
+  mapping(address => uint256) public excessTokenRewards;
+  mapping(address => uint256) public totalCumTokenRewardsPerStake;
+  mapping(address => uint256) public paidCumRewardsPerStake;
+  mapping(address => mapping(address => uint256)) public paidCumTokenRewardsPerStake;
+  mapping(address => uint256) public stakedBalance;
+  address[] public rewardTokens;
+  mapping(address => bool) public isApprovedRewardToken;
+  mapping(address => Stakeholder) public stakeholderInfo;
+  mapping(address => StakeTime[]) public lastStakes;
+  uint256 constant SCALE = 1e8;
 
   event Stake(address addr, uint256 amount);
   event Withdrawal(address addr, uint256 amount);
   event RewardCollection(address addr, uint256 amount);
+  event TokenRewardCollection(address token, address addr, uint256 amount);
 
-  enum WindowEventType {
-    Deposit,
-    Withdrawal,
-    RewardCollection
+  bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
+  struct StakeTime {
+    uint256 amount;
+    uint256 time;
+    uint256 feeEligible;
   }
 
-  struct Window {
-    WindowEventType eventType;
-    uint256 eventAmount;
-    address eventAddress;
-    uint256 rewardsInWindow;
-    uint256 totalSupplyAtWindow;
+  struct Stakeholder {
+    bool exists;
+    uint256 idx;
   }
 
   constructor(
       address _arbisToken
     ) ERC20("Staked ARBIS", "stARBIS") {
     arbisToken = IERC20(_arbisToken);
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    rewardTokens.push(_arbisToken);
+    isApprovedRewardToken[_arbisToken] = true;
   }
 
-  function addReward() external payable {
-    windows[currentWindow].rewardsInWindow += msg.value;
+  function addReward(address token, uint256 reward) external {
+    _addReward(token, reward, false);
   }
 
-  function incrementWindow(WindowEventType eventType, uint256 amount) private {
-    currentWindow += 1;
-    Window memory newWindow = Window(eventType, amount, msg.sender, 0, totalSupply());
-    windows[currentWindow] = newWindow;
+  function _addReward(address token, uint256 reward, bool intern) private {
+    require(isApprovedRewardToken[token], "Token is not approved for rewards");
+    console.log("Adding internal reward of token %s from address %s", token, msg.sender);
+    if (!intern) {
+      IERC20(token).safeTransferFrom(msg.sender, address(this), reward);
+    }
+    if (totalStaked == 0) {
+      // Rewards which nobody is eligible for
+      excessTokenRewards[token] += reward;
+      return;
+    }
+    uint256 rewardPerStake = (reward * SCALE) / totalStaked;
+    totalCumTokenRewardsPerStake[token] += rewardPerStake;
   }
 
   function stake(uint256 amount) external nonReentrant {
     require(amount > 0, "Invalid stake amount");
 
+    StakeTime memory s = StakeTime(amount, block.timestamp, amount);
+    lastStakes[msg.sender].push(s);
+
     // Transfer from msg.sender to us
-    require(arbisToken.transferFrom(msg.sender, address(this), amount), "Staked token transfer failed");
+    arbisToken.safeTransferFrom(msg.sender, address(this), amount);
 
     // Mint stARBIS
     _mint(msg.sender, amount);
 
-    incrementWindow(WindowEventType.Deposit, amount);
-    
+    if (!stakeholderInfo[msg.sender].exists) {
+      Stakeholder memory sh = Stakeholder(true, stakeholders.length);
+      stakeholders.push(payable(msg.sender));
+      stakeholderInfo[msg.sender] = sh;
+
+      // Not eligible for any previous rewards on any token
+      for (uint256 i = 0; i < rewardTokens.length; i++) {
+        address token = rewardTokens[i];
+        paidCumTokenRewardsPerStake[token][msg.sender] = totalCumTokenRewardsPerStake[token];
+      }
+    }
+    else {
+      _collectRewards();
+    }
+
     totalStaked += amount;
-    stakeBalances[msg.sender] += amount;
-    claimedUpToAndExcluding[msg.sender] = currentWindow;
-    stakeBalanceAt[msg.sender][currentWindow] = stakeBalances[msg.sender];
+    stakedBalance[msg.sender] += amount;
     emit Stake(msg.sender, amount);
   }
 
   function withdraw(uint256 amount) public nonReentrant {
     require(amount > 0, "Invalid withdraw amount");
-    require(amount <= stakeBalances[msg.sender], "Insufficient balance");
-    
+    require(amount <= stakedBalance[msg.sender], "Insufficient balance");
+
     // Burn stARBIS
     _burn(msg.sender, amount);
 
-    incrementWindow(WindowEventType.Withdrawal, amount);
-
-    // Return ARBIS to the sender
-    require(arbisToken.transfer(msg.sender, amount), "Staked token transfer failed");
-
-    stakeBalances[msg.sender] -= amount;
-    totalStaked -= amount;
-
-    if (balanceOf(msg.sender) == 0) {
+    if (stakedBalance[msg.sender] - amount == 0) {
       // No stake left, so we pay rewards to simplify bookkeeping
       _collectRewards();
+    }
+
+    stakedBalance[msg.sender] -= amount;
+    totalStaked -= amount;
+
+    uint256 amountEligibleForFee = getAndUpdateAmountEligibleForEarlyWithdrawalFee(amount);
+    console.log("Amount eligible for fee: %s", amountEligibleForFee);
+    uint256 fee = (amountEligibleForFee * earlyWithdrawalFee) / SCALE;
+    console.log("Fee: %s", fee);
+    uint256 redistributedAmount = (fee * earlyWithdrawalDistributeShare) / SCALE;
+    console.log("Redistributed amount: %s", redistributedAmount);
+    uint256 remaining = fee - redistributedAmount;
+
+    // Redistribute portion of fee to stakers
+    _addReward(address(arbisToken), redistributedAmount, true);
+
+    // The rest goes to the treasury
+    if (feeDestination != address(0)) {
+      arbisToken.safeTransfer(feeDestination, fee);
+    }
+    
+    // Return ARBIS to the sender, minus any early withdrawal fees
+    arbisToken.safeTransfer(msg.sender, amount - fee);
+
+    if (stakedBalance[msg.sender] == 0) { 
+      // Remove our records of this stakeholder
+      uint256 idx = stakeholderInfo[msg.sender].idx;
+      stakeholders[idx] = stakeholders[stakeholders.length - 1];
+      stakeholderInfo[stakeholders[idx]].idx = idx;
+      stakeholders.pop();
+      delete stakeholderInfo[msg.sender];
     }
     emit Withdrawal(msg.sender, amount);
   }
 
   function _collectRewards() private {
-    incrementWindow(WindowEventType.RewardCollection, 0);
-    // Calculate rewards
-    uint256 totalRewards = 0;
-    uint256 startIdx = claimedUpToAndExcluding[msg.sender];
-    uint256 amountStaked = stakeBalanceAt[msg.sender][startIdx];
-    for (uint256 i = startIdx; i < currentWindow; i++) {
-      // console.log("window %s", i);
-      // Was this window created because we staked or withdrew?
-      if (i > startIdx && windows[i].eventAddress == msg.sender) {
-        uint256 eventAmount = windows[i].eventAmount;
-        if (windows[i].eventType == WindowEventType.Deposit) {
-          // console.log("Increasing stake by %s to %s", eventAmount, amountStaked + eventAmount);
-          // Deposit - stake was increased
-          amountStaked += eventAmount;
-        }
-        else if (windows[i].eventType == WindowEventType.Withdrawal) {
-          // console.log("Decreasing stake by %s to %s", eventAmount, amountStaked - eventAmount);
-          // Withdrawal - stake was decreased
-          amountStaked -= eventAmount;
-        }
-      }
-
-      // Calculate share of rewards in this window based on pool share at the time
-      uint256 windowRewards = windows[i].rewardsInWindow;
-      uint256 windowTotalSupply = windows[i].totalSupplyAtWindow;
-      // console.log("windowRewards:       %s", windowRewards);
-      // console.log("windowTotalSupply:   %s", windows[i].totalSupplyAtWindow);
-      // console.log("amountStaked:        %s", amountStaked);
-      if (windowTotalSupply != 0) {
-        uint256 sharedRewards = (windowRewards * amountStaked * 10000) / (windowTotalSupply * 10000);
-        // console.log("sharedRewards:     %s", sharedRewards);
-        totalRewards += sharedRewards;
-        // console.log("totalRewards:     %s", totalRewards);
-      }
+    for (uint256 i = 0; i < rewardTokens.length; i++) {
+      _collectRewardsForToken(rewardTokens[i]);
     }
+  }
 
-    claimedUpToAndExcluding[msg.sender] = currentWindow;
-    stakeBalanceAt[msg.sender][currentWindow] = balanceOf(msg.sender);
-
-    // Send the ETH rewards
-    (bool success, bytes memory data) = msg.sender.call{value: totalRewards}("");
-    require(success, "Failed sending rewards");
+  function _collectRewardsForToken(address token) private {
+    require(stakedBalance[msg.sender] > 0, "No stake for rewards");
+    uint256 owedPerUnitStake = totalCumTokenRewardsPerStake[token] - paidCumTokenRewardsPerStake[token][msg.sender];
+    uint256 totalRewards = (stakedBalance[msg.sender] * owedPerUnitStake) / SCALE;
+    paidCumTokenRewardsPerStake[token][msg.sender] = totalCumTokenRewardsPerStake[token];
+    IERC20(token).safeTransfer(msg.sender, totalRewards);
     emit RewardCollection(msg.sender, totalRewards);
+  }
+
+  function getEligibleRewardsOfToken(address token) external returns (uint256 totalRewards) {
+    uint256 owedPerUnitStake = totalCumTokenRewardsPerStake[token] - paidCumTokenRewardsPerStake[token][msg.sender];
+    totalRewards = (stakedBalance[msg.sender] * owedPerUnitStake) / SCALE;
+  }
+
+  function getAndUpdateAmountEligibleForEarlyWithdrawalFee(uint256 withdrawalAmount) private returns (uint256) {
+    console.log("Calculating eligible fee amount for withdrawal of size %s for %s", withdrawalAmount, msg.sender);
+    StakeTime[] storage stakes = lastStakes[msg.sender];
+    if (stakes.length == 0) {
+      return 0;
+    }
+    // Walk backwards through stakes to determine how much of withdrawal amount
+    // was deposited within penalty window.
+    uint256 i = stakes.length - 1;
+    uint256 remaining = withdrawalAmount;
+    while (true) {
+      console.log("while loop %s", i);
+      console.log("remaining: %s", remaining);
+      if (stakes[i].time > block.timestamp - earlyWithdrawalSecondsThreshold && stakes[i].feeEligible != 0) {
+        console.log("stake of size %s within penalty period", stakes[i].amount);
+        // Amount was staked within penalty window
+        uint256 feeEligible = stakes[i].feeEligible;
+        console.log("fee eligible for stake %s: %s", i, feeEligible);
+        if (feeEligible > remaining) {
+          console.log("feeEligible > remaining");
+          console.log("Updating fee eligible for stake %s from %s to %s", i, stakes[i].feeEligible, stakes[i].feeEligible - remaining);
+          console.log("lastStakes[i].feeEligible: %s", lastStakes[msg.sender][i].feeEligible);
+          stakes[i].feeEligible -= remaining;
+          console.log("lastStakes[i].feeEligible: %s", lastStakes[msg.sender][i].feeEligible);
+          remaining = 0;
+          break;
+        }
+        else {
+          // This whole stake was deposited in penalty window
+          console.log("feeEligible <= remaining");
+          remaining -= feeEligible;
+          stakes[i].feeEligible = 0;
+        }
+      }
+      else {
+        console.log("stake of size %s older than penalty period (%s), breaking", stakes[i].amount, stakes[i].time);
+        break;
+      }
+      if (i == 0) {
+        // We're using a while to avoid an integer underflow exception
+        break;
+      }
+      i--;
+    }
+    return withdrawalAmount - remaining;
+  }
+
+  function getNumberOfStakeholders() external view returns (uint256) {
+    return stakeholders.length;
   }
 
   function collectRewards() external nonReentrant {
@@ -144,7 +230,46 @@ contract stARBIS is ERC20, Ownable, ReentrancyGuard {
     _collectRewards();
   }
 
-  function setClaimedUpTo(address who, uint256 idx) external onlyOwner {
-    claimedUpToAndExcluding[who] = idx;
+  function setFeeDestination(address payable dest) external onlyAdmin {
+    feeDestination = dest;
+  }
+
+  function setEarlyWithdrawalFee(uint256 fee) external onlyAdmin {
+    earlyWithdrawalFee = fee;
+  }
+
+  function setEarlyWithdrawalDistributeShare(uint256 amount) external onlyAdmin {
+    // The portion of the fee that is redistributed to stakers
+    earlyWithdrawalDistributeShare = amount;
+  }
+
+  function setEarlyWithdrawalSecondsThreshold(uint256 threshold) external onlyAdmin {
+    earlyWithdrawalSecondsThreshold = threshold;
+  }
+
+  function withdrawExcessRewards() external onlyAdmin {
+    for (uint256 i = 0; i < rewardTokens.length; i++) {
+      IERC20(rewardTokens[i]).safeTransfer(msg.sender, excessTokenRewards[rewardTokens[i]]);
+    }
+  }
+
+  function addApprovedRewardToken(address token) external onlyAdmin {
+    isApprovedRewardToken[token] = true;
+    rewardTokens.push(token);
+  }
+
+  function removeApprovedRewardToken(address token) external onlyAdmin {
+    for (uint256 i = 0; i < rewardTokens.length; i++) {
+      if (rewardTokens[i] == token) {
+        rewardTokens[i] = rewardTokens[rewardTokens.length - 1];
+        rewardTokens.pop();
+        isApprovedRewardToken[token] = false;
+      }
+    }
+  }
+
+  modifier onlyAdmin() {
+    require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
+    _;
   }
 }
