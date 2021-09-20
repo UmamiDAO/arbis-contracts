@@ -1,6 +1,29 @@
 [
     {
-        "name": "Big test",
+        "name": "simple_stake_withdraw",
+        "description": "Pay rewards when no remaining stake",
+        "actions": [
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "reward", "amount": "1" },
+            { "type": "withdraw", "account": 0, "amount": "150", "expect": "1"}
+        ]
+    },
+    {
+        "name": "no_stake_rewards",
+        "description": "No stake while rewards",
+        "actions": [
+            { "type": "reward", "amount": "1" },
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "withdraw", "account": 0, "amount": "150" },
+            { "type": "reward", "amount": "3" },
+            { "type": "reward", "amount": "7" },
+            { "type": "stake", "account": 0, "amount": "150" },
+            { "type": "collect", "account": 0, "amount": "150", "expect": "0" }
+        ]
+    },
+    {
+        "name": "big_one",
+        "description": "A more realistic sequence of events",
         "actions": [
             { "type": "reward", "amount": "7" },
             { "type": "stake", "account": 0, "amount": "150" },
@@ -18,29 +41,19 @@
             { "type": "reward", "amount": "10" },
             { "type": "collect", "account": 0, "expect": "14" },
             { "type": "withdraw", "account": 0, "amount": "150" },
-            { "type": "stake", "account": 2, "amount": "50" },
+            { "type": "stake", "account": 2, "amount": "50", "expect": "7" },
             { "type": "reward", "amount": "100" },
-            { "type": "withdraw", "account": 1, "amount": "150", "expect": "30" }
-        ]
-    },
-    {
-        "name": "Pay rewards when no remaining stake",
-        "actions": [
-            { "type": "stake", "account": 0, "amount": "150" },
-            { "type": "reward", "amount": "1" },
-            { "type": "withdraw", "account": 0, "amount": "150" }
-        ]
-    },
-    {
-        "name": "No stake while rewards",
-        "actions": [
-            { "type": "reward", "amount": "1" },
-            { "type": "stake", "account": 0, "amount": "150" },
-            { "type": "withdraw", "account": 0, "amount": "150" },
-            { "type": "reward", "amount": "3" },
-            { "type": "reward", "amount": "7" },
-            { "type": "stake", "account": 0, "amount": "150" },
-            { "type": "collect", "account": 0, "amount": "150", "expect": "0" }
+            { "type": "withdraw", "account": 1, "amount": "150", "expect": "32.5" },
+            { "type": "withdraw", "account": 2, "amount": "350", "expect": "70" },
+            { "type": "stake", "account": 0, "amount": "500" },
+            { "type": "reward", "amount": "10" },
+            { "type": "withdraw", "account": 0, "amount": "500", "expect": "10" },
+            { "type": "stake", "account": 1, "amount": "500" },
+            { "type": "reward", "amount": "10" },
+            { "type": "withdraw", "account": 1, "amount": "500", "expect": "10" },
+            { "type": "stake", "account": 2, "amount": "500" },
+            { "type": "reward", "amount": "10" },
+            { "type": "withdraw", "account": 2, "amount": "500", "expect": "10" }
         ]
     }
 ]
