@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,13 +11,12 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
   IERC20 public immutable arbisToken;
-  
   uint256 public totalStaked = 0;
   address payable public feeDestination;
   uint256 public earlyWithdrawalFee = 0;
   uint256 public earlyWithdrawalDistributeShare = 0;
   uint256 public earlyWithdrawalSecondsThreshold = 0;
-  address payable[] stakeholders;
+  address payable[] public stakeholders;
   mapping(address => uint256) public excessTokenRewards;
   mapping(address => uint256) public totalCumTokenRewardsPerStake;
   mapping(address => uint256) public paidCumRewardsPerStake;
@@ -28,21 +25,14 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
   address[] public rewardTokens;
   mapping(address => bool) public isApprovedRewardToken;
   mapping(address => Stakeholder) public stakeholderInfo;
-  mapping(address => StakeTime[]) public lastStakes;
-  uint256 constant SCALE = 1e8;
+  mapping(address => uint256) public lastStakeTime;
+  uint256 constant public SCALE = 1e8;
 
   event Stake(address addr, uint256 amount);
   event Withdrawal(address addr, uint256 amount);
-  event RewardCollection(address addr, uint256 amount);
-  event TokenRewardCollection(address token, address addr, uint256 amount);
+  event RewardCollection(address token, address addr, uint256 amount);
 
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
-  struct StakeTime {
-    uint256 amount;
-    uint256 time;
-    uint256 feeEligible;
-  }
 
   struct Stakeholder {
     bool exists;
@@ -58,13 +48,12 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
     isApprovedRewardToken[_arbisToken] = true;
   }
 
-  function addReward(address token, uint256 reward) external {
+  function addReward(address token, uint256 reward) external nonReentrant {
     _addReward(token, reward, false);
   }
 
   function _addReward(address token, uint256 reward, bool intern) private {
     require(isApprovedRewardToken[token], "Token is not approved for rewards");
-    console.log("Adding internal reward of token %s from address %s", token, msg.sender);
     if (!intern) {
       IERC20(token).safeTransferFrom(msg.sender, address(this), reward);
     }
@@ -79,10 +68,6 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
 
   function stake(uint256 amount) external nonReentrant {
     require(amount > 0, "Invalid stake amount");
-
-    StakeTime memory s = StakeTime(amount, block.timestamp, amount);
-    lastStakes[msg.sender].push(s);
-
     // Transfer from msg.sender to us
     arbisToken.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -106,6 +91,7 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
 
     totalStaked += amount;
     stakedBalance[msg.sender] += amount;
+    lastStakeTime[msg.sender] = block.timestamp;
     emit Stake(msg.sender, amount);
   }
 
@@ -124,22 +110,23 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
     stakedBalance[msg.sender] -= amount;
     totalStaked -= amount;
 
-    uint256 amountEligibleForFee = getAndUpdateAmountEligibleForEarlyWithdrawalFee(amount);
-    console.log("Amount eligible for fee: %s", amountEligibleForFee);
-    uint256 fee = (amountEligibleForFee * earlyWithdrawalFee) / SCALE;
-    console.log("Fee: %s", fee);
-    uint256 redistributedAmount = (fee * earlyWithdrawalDistributeShare) / SCALE;
-    console.log("Redistributed amount: %s", redistributedAmount);
-    uint256 remaining = fee - redistributedAmount;
+    // If you deposited anything within the threshold this will be penalised
+    uint256 delta = block.timestamp - lastStakeTime[msg.sender];
+    uint256 fee = 0;
+    if (delta < earlyWithdrawalSecondsThreshold) {
+      uint256 actualFeePct = earlyWithdrawalFee - ((delta * earlyWithdrawalFee) / earlyWithdrawalSecondsThreshold);
+      fee = (amount * actualFeePct) / SCALE;
+      uint256 redistributedAmount = (fee * earlyWithdrawalDistributeShare) / SCALE;
+      uint256 remaining = fee - redistributedAmount;
+      // Redistribute portion of fee to stakers
+      _addReward(address(arbisToken), redistributedAmount, true);
 
-    // Redistribute portion of fee to stakers
-    _addReward(address(arbisToken), redistributedAmount, true);
-
-    // The rest goes to the treasury
-    if (feeDestination != address(0)) {
-      arbisToken.safeTransfer(feeDestination, fee);
+      // The rest goes to the treasury
+      if (feeDestination != address(0)) {
+        arbisToken.safeTransfer(feeDestination, remaining);
+      } 
     }
-    
+
     // Return ARBIS to the sender, minus any early withdrawal fees
     arbisToken.safeTransfer(msg.sender, amount - fee);
 
@@ -166,59 +153,12 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
     uint256 totalRewards = (stakedBalance[msg.sender] * owedPerUnitStake) / SCALE;
     paidCumTokenRewardsPerStake[token][msg.sender] = totalCumTokenRewardsPerStake[token];
     IERC20(token).safeTransfer(msg.sender, totalRewards);
-    emit RewardCollection(msg.sender, totalRewards);
+    emit RewardCollection(token, msg.sender, totalRewards);
   }
 
-  function getEligibleRewardsOfToken(address token) external returns (uint256 totalRewards) {
+  function getAvailableTokenRewards(address token) external view returns (uint256 totalRewards) {
     uint256 owedPerUnitStake = totalCumTokenRewardsPerStake[token] - paidCumTokenRewardsPerStake[token][msg.sender];
     totalRewards = (stakedBalance[msg.sender] * owedPerUnitStake) / SCALE;
-  }
-
-  function getAndUpdateAmountEligibleForEarlyWithdrawalFee(uint256 withdrawalAmount) private returns (uint256) {
-    console.log("Calculating eligible fee amount for withdrawal of size %s for %s", withdrawalAmount, msg.sender);
-    StakeTime[] storage stakes = lastStakes[msg.sender];
-    if (stakes.length == 0) {
-      return 0;
-    }
-    // Walk backwards through stakes to determine how much of withdrawal amount
-    // was deposited within penalty window.
-    uint256 i = stakes.length - 1;
-    uint256 remaining = withdrawalAmount;
-    while (true) {
-      console.log("while loop %s", i);
-      console.log("remaining: %s", remaining);
-      if (stakes[i].time > block.timestamp - earlyWithdrawalSecondsThreshold && stakes[i].feeEligible != 0) {
-        console.log("stake of size %s within penalty period", stakes[i].amount);
-        // Amount was staked within penalty window
-        uint256 feeEligible = stakes[i].feeEligible;
-        console.log("fee eligible for stake %s: %s", i, feeEligible);
-        if (feeEligible > remaining) {
-          console.log("feeEligible > remaining");
-          console.log("Updating fee eligible for stake %s from %s to %s", i, stakes[i].feeEligible, stakes[i].feeEligible - remaining);
-          console.log("lastStakes[i].feeEligible: %s", lastStakes[msg.sender][i].feeEligible);
-          stakes[i].feeEligible -= remaining;
-          console.log("lastStakes[i].feeEligible: %s", lastStakes[msg.sender][i].feeEligible);
-          remaining = 0;
-          break;
-        }
-        else {
-          // This whole stake was deposited in penalty window
-          console.log("feeEligible <= remaining");
-          remaining -= feeEligible;
-          stakes[i].feeEligible = 0;
-        }
-      }
-      else {
-        console.log("stake of size %s older than penalty period (%s), breaking", stakes[i].amount, stakes[i].time);
-        break;
-      }
-      if (i == 0) {
-        // We're using a while to avoid an integer underflow exception
-        break;
-      }
-      i--;
-    }
-    return withdrawalAmount - remaining;
   }
 
   function getNumberOfStakeholders() external view returns (uint256) {
@@ -266,6 +206,12 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
         isApprovedRewardToken[token] = false;
       }
     }
+  }
+
+  function recoverEth() external onlyAdmin {
+    // For recovering eth mistakenly sent to the contract
+    (bool success, ) = msg.sender.call{value: address(this).balance}("");
+    require(success, "Withdraw failed");
   }
 
   modifier onlyAdmin() {
