@@ -7,6 +7,8 @@
 All contracts are unaudited, standard yield farming risks apply.
 
 ## Verified Contract Addresses
+
+### Strategies
 | Name | Address |
 | --- | --- |
 | FarmList | [0xdd7e7aaab118b5a48779f63f2d3f0b49ce0cedca](https://arbiscan.io/address/0xdd7e7aaab118b5a48779f63f2d3f0b49ce0cedca)"
@@ -19,10 +21,16 @@ All contracts are unaudited, standard yield farming risks apply.
 | SushiLPFarmStrategyFactory | [0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB](https://arbiscan.io/address/0xaE598cE4982103Ad994f4A368DBD5F8b8b11b9fB)|
 | SwaprLPFarmStrategy | [0x1c3e7f51a9d24e813fa7c2614713b727a4da1a56](https://arbiscan.io/address/0x1c3e7f51a9d24e813fa7c2614713b727a4da1a56) |
 
-## Factory Created Contract Addresses
+### Factory Created Contract Addresses
 There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy instances), view it for source code and abi information
 
 | Name | Address | Notes |
 | --- | --- | --- |
 | MIMETHStrategy | [0x1F65a3437800CcA4d1e169FE5Df49b809ef5830D](https://arbiscan.io/address/0x1F65a3437800CcA4d1e169FE5Df49b809ef5830D)||
 | USDCETHStrategy | [0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703](https://arbiscan.io/address/0xBDE8B37161a87Ca84DA6C06874Aa1E8F7AE05703)| Deployed from factory 0xCFdA66EA159D38F362F8595c255E543c184Ef20b |
+
+### Others
+| Name | Address |
+| --- | --- |
+| ARBIS | [0x9f20de1fc9b161b34089cbeae888168b44b03461](https://arbiscan.io/token/0x9f20de1fc9b161b34089cbeae888168b44b03461) 
+| stARBIS | [0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d](https://arbiscan.io/address/0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d)|
