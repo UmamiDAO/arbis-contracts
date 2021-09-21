@@ -11,7 +11,7 @@ async function main() {
     "0x54501d756F4fAbBD6d75D21fEC6f9349626f9a8e", // picky
     "0xE2A06daDfcb0007855224F6f63CB34e2E6be0d6C", // puffy
     "0x0C0512D19577763F1de55f75B33aD74A275225d5", // pinky
-    "kianaxbt.eth"                                // kiana
+    "0x4e5e568f452fca4af069f98af24cdb77b99649c7", // kiana
   ] 
   const twoWeeks = 60 * 60 * 24 * 14;
   const MultiSigPeriodicTimeLock = await ethers.getContractFactory("MultiSigPeriodicTimeLock");
