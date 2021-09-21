@@ -64,6 +64,14 @@ describe("MultiSigTimeLock", async function () {
     expect(beneficiary).to.be.equal(accounts[0].address);
   });
 
+  it("setBenificiary - partial approval", async function () {
+    for (let i = 0; i < 2; i++) {
+      await timelock.connect(accounts[i]).approve(1);
+    }
+    await expect(timelock.connect(accounts[0]).setBeneficiary(accounts[0].address)).to.be.revertedWith("Signatory has not approved");
+  });
+
+
   it("setBenificiary - reset approvals", async function () {
     for (let i = 0; i < 4; i++) {
       await timelock.connect(accounts[i]).approve(1);
