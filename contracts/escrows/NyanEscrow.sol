@@ -105,6 +105,10 @@ interface IRouter {
 }
 
 
+interface INonCompliantStrategy {
+    function updateAdmin(address newAdmin) external;
+}
+
 contract NyanEscrow is Ownable, IEscrow {
     address public recipient;
     IERC20 token;
@@ -156,6 +160,11 @@ contract NyanEscrow is Ownable, IEscrow {
     function revertStrategyOwnership(address strategy) external onlyOwner {
         Ownable instance = Ownable(strategy);
         instance.transferOwnership(owner);
+    }
+    
+     function revertStrategyOwnershipNonCompliant(address strategy) external onlyOwner {
+        INonCompliantStrategy instance = INonCompliantStrategy(strategy);
+        instance.updateAdmin(owner);
     }
     
     /**
