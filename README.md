@@ -34,4 +34,4 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | --- | --- |
 | ARBIS | [0x9f20de1fc9b161b34089cbeae888168b44b03461](https://arbiscan.io/token/0x9f20de1fc9b161b34089cbeae888168b44b03461) 
 | stARBIS | [0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d](https://arbiscan.io/address/0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d)|
-| NyanEscrow| [0x211A39dCbF67D3781aF34A824c716aD0C8D4eF63](https://arbiscan.io/address/0x211A39dCbF67D3781aF34A824c716aD0C8D4eF63)|
+| NyanEscrow| [0xce789f111A51599c9908039Fb922e0945AB555be](https://arbiscan.io/address/0xce789f111A51599c9908039Fb922e0945AB555be)|
