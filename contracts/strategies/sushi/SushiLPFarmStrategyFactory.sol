@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "contracts/strategies/SushiLPFarmStrategy.sol";
+import "contracts/strategies/sushi/SushiLPFarmStrategy.sol";
 
 
 contract SushiLPFarmStrategyFactory is Ownable {

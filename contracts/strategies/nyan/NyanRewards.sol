@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "contracts/StakedTokenWrapper.sol";
+import "contracts/staking/StakedEthAndTokenHolder.sol";
 
 contract NyanRewards is StakedTokenWrapper, Ownable {
     IERC20 public rewardToken;
@@ -41,12 +41,12 @@ contract NyanRewards is StakedTokenWrapper, Ownable {
     }
 
     function rewardPerToken() public view returns (uint128) {
-        if (totalStakedSupply == 0) {
+        if (totalSupply == 0) {
             return rewardPerTokenStored;
         }
         unchecked {
             uint256 rewardDuration = lastTimeRewardApplicable()-lastUpdateTime;
-            return uint128(rewardPerTokenStored + rewardDuration*rewardRate*1e18/totalStakedSupply);
+            return uint128(rewardPerTokenStored + rewardDuration*rewardRate*1e18/totalSupply);
         }
     }
 
@@ -89,7 +89,7 @@ contract NyanRewards is StakedTokenWrapper, Ownable {
             uint64 blockTimestamp = uint64(block.timestamp);
             uint256 maxRewardSupply = rewardToken.balanceOf(address(this));
             if(rewardToken == stakedToken)
-                maxRewardSupply -= totalStakedSupply;
+                maxRewardSupply -= totalSupply;
             uint256 leftover = 0;
             if (blockTimestamp >= periodFinish) {
                 rewardRate = reward/duration;
@@ -109,7 +109,7 @@ contract NyanRewards is StakedTokenWrapper, Ownable {
         uint256 rewardSupply = rewardToken.balanceOf(address(this));
         //ensure funds staked by users can't be transferred out
         if(rewardToken == stakedToken)
-                rewardSupply -= totalStakedSupply;
+                rewardSupply -= totalSupply;
         require(rewardToken.transfer(msg.sender, rewardSupply));
         rewardRate = 0;
         periodFinish = uint64(block.timestamp);

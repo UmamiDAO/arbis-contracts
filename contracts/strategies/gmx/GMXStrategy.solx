@@ -5,20 +5,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "contracts/staking/StakedEthAndTokenHolder.sol";
-import "contracts/strategies/nyan/NyanRewards.sol";
+import "contracts/StakedTokenWrapper.sol";
+import "contracts/strategies/gmx/GMXRewards.sol";
 import "contracts/interfaces/IStrategy.sol";
 
-
-contract NyanStrategy is ERC20, IStrategy {
-  
-  address private _admin;
-
+contract GMXStrategy is ERC20, IStrategy, Ownable {
   uint public totalDeposits;
 
   IERC20 public arbi;
-  IERC20 public nyanToken;
+  IERC20 public stakeToken;
   NyanRewards public stakingContract;
+  GMXCompounder compounder;
 
   uint public MIN_TOKENS_TO_REINVEST = 20;
   uint public REINVEST_REWARD_BIPS = 100;
@@ -34,14 +31,15 @@ contract NyanStrategy is ERC20, IStrategy {
   event UpdateMinTokensToReinvest(uint oldValue, uint newValue);
 
   constructor(
-    address _nyanToken, 
-    address _stakingContract
-  ) ERC20("NYAN Stake Shares", "NYAN-SHARES"){
-    _admin = msg.sender;
-    nyanToken = IERC20(_nyanToken);
-    stakingContract = NyanRewards(_stakingContract);
-    uint256 ts = nyanToken.totalSupply();
-    nyanToken.approve(_stakingContract, ts);
+    address _stakeToken, 
+    address _stakingContract,
+  ) ERC20("GMX Stake Shares", "GMX-SHARES"){
+    stakeToken = IERC20(_stakeToken);
+    stakingContract = GMXRewards(_stakingContract);
+    uint256 ts = stakeToken.totalSupply();
+    stakeToken.approve(_stakingContract, ts);
+
+    compounder = GMXCompounder(0xc73d553473dC65CE56db96c58e6a091c20980fbA);
   }
   
   function reapproveStaking() public {
@@ -54,27 +52,14 @@ contract NyanStrategy is ERC20, IStrategy {
   }
   
   function getUnderlying() external override view returns(address) {
-      return address(nyanToken);
+      return address(stakeToken);
   }
   
-  function updateAdmin(address newAdmin) public onlyAdmin {
-      _admin = newAdmin;
-  }
-  
-  function setArbi(address arbiAddress) public onlyAdmin {
+  function setArbi(address arbiAddress) public onlyOwner {
       require(address(arbi) == 0x0000000000000000000000000000000000000000, "arbi already set");
       arbi = IERC20(arbiAddress);
   }
   
-  modifier onlyAdmin() {
-      require(msg.sender == _admin, "onlyadmin");
-      _;
-  }
-  
-  function admin() public view returns (address payable) {
-      return payable(_admin);
-  }
-
   /**
     * @dev Throws if called by smart contract
     */
@@ -90,7 +75,6 @@ contract NyanStrategy is ERC20, IStrategy {
   function deposit(uint amount) override external {
     _deposit(amount);
   }
-
 
   function _deposit(uint amount) internal {
     require(totalDeposits >= totalSupply(), "deposit failed");
@@ -165,10 +149,26 @@ contract NyanStrategy is ERC20, IStrategy {
     return 0;
   }
 
+    function _compoundGmx(address _account) private {
+        
+    }
+
+    function _compoundGlp(address _account) private {
+        uint256 esGmxAmount = IRewardTracker(stakedGlpTracker).claimForAccount(_account, _account);
+        if (esGmxAmount > 0) {
+            _stakeGmx(_account, _account, esGmx, esGmxAmount);
+        }
+    }
+
   /**
    * @notice Reinvest rewards from staking contract to LP tokens
    */
   function reinvest() override external onlyEOA {
+
+
+    /*
+
+    */
     uint unclaimedRewards = checkReward();
     require(unclaimedRewards >= MIN_TOKENS_TO_REINVEST, "MIN_TOKENS_TO_REINVEST");
     
@@ -179,7 +179,7 @@ contract NyanStrategy is ERC20, IStrategy {
     stakingContract.getReward();
     uint adminFee = (unclaimedRewards * ADMIN_FEE_BIPS) / BIPS_DIVISOR;
     if (adminFee > 0) {
-      require(nyanToken.transfer(admin(), adminFee), "admin fee transfer failed");
+      require(nyanToken.transfer(owner(), adminFee), "admin fee transfer failed");
     }
 
     uint reinvestFee = (unclaimedRewards * REINVEST_REWARD_BIPS) / BIPS_DIVISOR;
@@ -219,7 +219,7 @@ contract NyanStrategy is ERC20, IStrategy {
    * @notice Update reinvest minimum threshold
    * @param newValue min threshold in wei
    */
-  function updateMinTokensToReinvest(uint newValue) external onlyAdmin {
+  function updateMinTokensToReinvest(uint newValue) external onlyOwner {
     emit UpdateMinTokensToReinvest(MIN_TOKENS_TO_REINVEST, newValue);
     MIN_TOKENS_TO_REINVEST = newValue;
   }
@@ -229,7 +229,7 @@ contract NyanStrategy is ERC20, IStrategy {
    * @dev Total fees cannot be greater than BIPS_DIVISOR (5% max)
    * @param newValue specified in BIPS
    */
-  function updateAdminFee(uint newValue) external onlyAdmin {
+  function updateAdminFee(uint newValue) external onlyOwner {
     require(newValue + REINVEST_REWARD_BIPS <= BIPS_DIVISOR / 20, "admin fee too high");
     emit UpdateAdminFee(ADMIN_FEE_BIPS, newValue);
     ADMIN_FEE_BIPS = newValue;
@@ -240,7 +240,7 @@ contract NyanStrategy is ERC20, IStrategy {
    * @dev Total fees cannot be greater than BIPS_DIVISOR (5% max)
    * @param newValue specified in BIPS
    */
-  function updateReinvestReward(uint newValue) external onlyAdmin {
+  function updateReinvestReward(uint newValue) external onlyOwner {
     require(newValue + ADMIN_FEE_BIPS <= BIPS_DIVISOR / 20, "reinvest reward too high");
     emit UpdateReinvestReward(REINVEST_REWARD_BIPS, newValue);
     REINVEST_REWARD_BIPS = newValue;
@@ -250,7 +250,7 @@ contract NyanStrategy is ERC20, IStrategy {
    * @notice Recover ETH from contract (there should never be any in this contract)
    * @param amount amount
    */
-  function recoverETH(uint amount) external onlyAdmin {
+  function recoverETH(uint amount) external onlyOwner {
     require(amount > 0, 'amount too low');
     admin().transfer(amount);
     emit Recovered(address(0), amount);

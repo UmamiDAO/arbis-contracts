@@ -5,13 +5,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "contracts/StakedTokenWrapper.sol";
+import "contracts/strategies/gmx/IRewardTracker.sol";
+import "contracts/strategies/gmx/IRewardRouter.sol";
 
-contract NyanRewards is StakedTokenWrapper, Ownable {
+contract GMXRewards is StakedTokenWrapper, Ownable {
     IERC20 public rewardToken;
     uint256 public rewardRate;
     uint64 public periodFinish;
     uint64 public lastUpdateTime;
     uint128 public rewardPerTokenStored;
+
+    IRewardRouter rewardRouter;
+    IRewardTracker stakedGmxTracker;
+    IRewardTracker bonusGmxTracker;
+    IRewardTracker feeGmxTracker;
+
     struct UserRewards {
         uint128 userRewardPerTokenPaid;
         uint128 rewards;
@@ -24,6 +32,10 @@ contract NyanRewards is StakedTokenWrapper, Ownable {
     constructor(IERC20 _rewardToken, IERC20 _stakedToken) {
         rewardToken = _rewardToken;
         stakedToken = _stakedToken;
+        rewardRouter = IRewardRouter(0xc73d553473dC65CE56db96c58e6a091c20980fbA);
+        stakedGmxTracker = IRewardTracker(rewardRouter.stakedGmxTracker);
+        bonusGmxTracker = IRewardTracker(rewardRouter.bonusGmxTracker);
+        feeGmxTracker = IRewardTracker(rewardRouter.feeGmxTracker);
     }
 
     modifier updateReward(address account) {
@@ -51,10 +63,40 @@ contract NyanRewards is StakedTokenWrapper, Ownable {
         }
     }
 
-    function earned(address account) public view returns (uint128) {
-        unchecked { 
-            return uint128(balanceOf(account)*(rewardPerToken()-userRewards[account].userRewardPerTokenPaid)/1e18 + userRewards[account].rewards);
+    function calculateRewards() private view returns (uint128) {
+        // We have to do this manually as we 
+        uint256 blockReward = IRewardDistributor(distributor).distribute();
+
+        uint256 supply = stakedGmxTracker.totalSupply;
+        uint256 _cumulativeRewardPerToken = stakedGmxTracker.cumulativeRewardPerToken;
+        if (supply > 0 && blockReward > 0) {
+            _cumulativeRewardPerToken = _cumulativeRewardPerToken + ((blockReward * PRECISION) / supply);
+            cumulativeRewardPerToken = _cumulativeRewardPerToken;
         }
+
+        // cumulativeRewardPerToken can only increase
+        // so if cumulativeRewardPerToken is zero, it means there are no rewards yet
+        if (_cumulativeRewardPerToken == 0) {
+            return 0;
+        }
+
+        address constant _account = address(this);
+        uint256 stakedAmount = stakedGmxTracker.stakedAmounts[_account];
+        uint256 accountReward = stakedAmount * ((_cumulativeRewardPerToken - previousCumulatedRewardPerToken[_account]) / PRECISION);
+        uint256 _claimableReward = stakedGmxTracker.claimableReward[_account] + accountReward;
+    }
+
+    function earned(address account) public view returns (uint128) {
+        uint256 esGmxAmount = IRewardTracker(stakedGmxTracker).claimForAccount(account, account);
+        if (esGmxAmount > 0) {
+            _stakeGmx(_account, _account, esGmx, esGmxAmount);
+        }
+
+        uint256 bnGmxAmount = IRewardTracker(bonusGmxTracker).claimForAccount(_account, _account);
+        if (bnGmxAmount > 0) {
+            IRewardTracker(feeGmxTracker).stakeForAccount(_account, _account, bnGmx, bnGmxAmount);
+        }
+        return esGmxAmount + bnGmxAmount;
     }
 
     function stake(uint128 amount) external payable {

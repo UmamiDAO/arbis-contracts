@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "contracts/StakedTokenWrapper.sol";
-import "contracts/NyanRewards.sol";
+import "contracts/staking/StakedEthAndTokenHolder.sol";
+import "contracts/strategies/nyan/NyanRewards.sol";
 import "contracts/interfaces/IStrategy.sol";
 import "contracts/interfaces/IRouter.sol";
 import "contracts/interfaces/IPair.sol";
