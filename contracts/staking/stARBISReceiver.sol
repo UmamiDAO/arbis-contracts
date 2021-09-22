@@ -11,7 +11,6 @@ contract stARBISReceiver is AccessControl, ReentrancyGuard {
   stARBIS public immutable stARBISContract;
   address[] distributedTokens; 
   mapping(address => bool) isDistributedToken;
-  uint256 public immutable SCALE = 1e8;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
   constructor(address _stARBIS) {
@@ -26,7 +25,7 @@ contract stARBISReceiver is AccessControl, ReentrancyGuard {
       address token = distributedTokens[i];
       uint256 tokenBalance = IERC20(token).balanceOf(address(this));
       if (tokenBalance == 0) { continue; }
-      IERC20(token).approve(address(stARBISContract), tokenBalance);
+      require(IERC20(token).approve(address(stARBISContract), tokenBalance), "Approve failed");
       stARBISContract.addReward(token, tokenBalance);
       emit RewardAdded(token, tokenBalance);
     }
