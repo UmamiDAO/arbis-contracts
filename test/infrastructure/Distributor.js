@@ -17,7 +17,7 @@ describe("Distributor", async function () {
     doge = await TestToken.deploy();
 
     const Distributor = await ethers.getContractFactory("Distributor");
-    distributor = await Distributor.deploy();
+    distributor = await Distributor.deploy("Cool distributor");
 
     SCALE = await distributor.SCALE();
     let ADMIN_ROLE = await distributor.ADMIN_ROLE();
@@ -43,12 +43,21 @@ describe("Distributor", async function () {
     await distributor.setDestinations(dests, shares);
   });
 
+  it("setName", async function () {
+    let name = await distributor.name();
+    expect(name).to.equal("Cool distributor");
+
+    await distributor.setName("XXX");
+    name = await distributor.name();
+    expect(name).to.equal("XXX");
+  });
 
   it("e2e", async function () {
     let dests = [accounts[0].address, accounts[1].address];
     let shares = [0.75 * SCALE, 0.25 * SCALE];
 
     await distributor.addDistributedToken(doge.address);
+    shares = [0.6 * SCALE, 0.4 * SCALE];
     await distributor.setDestinations(dests, shares);
 
     let amount = ethers.utils.parseEther("100");
@@ -60,7 +69,7 @@ describe("Distributor", async function () {
     await distributor.distribute();
     let newDogeBal = await doge.balanceOf(accounts[0].address);
     let newWethBal = await doge.balanceOf(accounts[1].address);
-    expect(newDogeBal).to.be.equal(oldDogeBal.add(ethers.utils.parseEther("75")));
-    expect(newWethBal).to.be.equal(oldWethBal.add(ethers.utils.parseEther("25")));
+    expect(newDogeBal).to.be.equal(oldDogeBal.add(ethers.utils.parseEther("60")));
+    expect(newWethBal).to.be.equal(oldWethBal.add(ethers.utils.parseEther("40")));
   });
 });

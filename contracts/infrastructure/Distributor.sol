@@ -14,10 +14,14 @@ contract Distributor is AccessControl, ReentrancyGuard {
   mapping(address => bool) isDistributedToken;
   uint256 public immutable SCALE = 1e8;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+  string public name;
 
-  constructor() {
+  constructor(string memory _name) {
+    name = _name;
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
+
+  event DistributedToken(address token, uint256 amount);
 
   function setDestinations(address[] calldata _destinations, uint256[] calldata _shares) external onlyAdmin {
     require(_destinations.length == _shares.length, "Destinations and shares different lengths");
@@ -33,10 +37,16 @@ contract Distributor is AccessControl, ReentrancyGuard {
 
   function distribute() public nonReentrant {
     for (uint256 i = 0; i < distributedTokens.length; i++) {
-      uint256 tokenBalance = IERC20(distributedTokens[i]).balanceOf(address(this));
+      address token = distributedTokens[i];
+      uint256 tokenBalance = IERC20(token).balanceOf(address(this));
+      if (tokenBalance == 0) {
+        // Nothing to distribute for this token
+        continue;
+      }
       for (uint256 j = 0; j < destinations.length; j++) {
         uint256 shareAmount = (tokenBalance * shares[j]) / SCALE;
-        IERC20(distributedTokens[i]).safeTransfer(destinations[j], shareAmount);
+        IERC20(token).safeTransfer(destinations[j], shareAmount);
+        emit DistributedToken(token, shareAmount);
       }
     }
   }
@@ -59,6 +69,10 @@ contract Distributor is AccessControl, ReentrancyGuard {
   function recoverEth() external onlyAdmin {
     (bool success, ) = msg.sender.call{value: address(this).balance}("");
     require(success, "Withdraw failed");
+  }
+
+  function setName(string calldata _name) external onlyAdmin {
+    name = _name;
   }
 
   modifier onlyAdmin() {
