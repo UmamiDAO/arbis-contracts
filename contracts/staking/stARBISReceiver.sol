@@ -26,6 +26,7 @@ contract stARBISReceiver is AccessControl, ReentrancyGuard {
       address token = distributedTokens[i];
       uint256 tokenBalance = IERC20(token).balanceOf(address(this));
       if (tokenBalance == 0) { continue; }
+      IERC20(token).approve(address(stARBISContract), tokenBalance);
       stARBISContract.addReward(token, tokenBalance);
       emit RewardAdded(token, tokenBalance);
     }
