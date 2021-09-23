@@ -190,6 +190,7 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
   function withdrawExcessRewards() external onlyAdmin {
     for (uint256 i = 0; i < rewardTokens.length; i++) {
       IERC20(rewardTokens[i]).safeTransfer(msg.sender, excessTokenRewards[rewardTokens[i]]);
+      excessTokenRewards[rewardTokens[i]] = 0;
     }
   }
 
