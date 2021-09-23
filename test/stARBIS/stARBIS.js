@@ -194,6 +194,9 @@ describe("stARBIS", async function () {
     await stARBIS.withdrawExcessRewards();
     let bal = await weth.balanceOf(owner.address);
     expect(bal, "Didn't receive excess rewards").to.equal(oldBal.add(amount));
+
+    excess = await stARBIS.excessTokenRewards(weth.address);
+    expect(excess, "excessTokenRewards wasn't updated properly").to.equal(0);
   });
 
   it("Rewards - getAvailableTokenRewards", async function () {
