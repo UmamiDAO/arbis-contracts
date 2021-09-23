@@ -9,8 +9,8 @@ import "contracts/staking/stARBIS.sol";
 
 contract stARBISReceiver is AccessControl, ReentrancyGuard {
   stARBIS public immutable stARBISContract;
-  address[] distributedTokens; 
-  mapping(address => bool) isDistributedToken;
+  address[] public distributedTokens;
+  mapping(address => bool) public isDistributedToken;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
   constructor(address _stARBIS) {
