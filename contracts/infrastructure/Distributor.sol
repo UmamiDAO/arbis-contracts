@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract Distributor is AccessControl, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
-  address[] destinations;
-  uint256[] shares;
-  address[] distributedTokens; 
-  mapping(address => bool) isDistributedToken;
+  address[] public destinations;
+  uint256[] public shares;
+  address[] public distributedTokens;
+  mapping(address => bool) public isDistributedToken;
   uint256 public immutable SCALE = 1e8;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
   string public name;
