@@ -19,18 +19,18 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
   address payable[] public stakeholders;
   mapping(address => uint256) public excessTokenRewards;
   mapping(address => uint256) public totalCumTokenRewardsPerStake;
-  mapping(address => uint256) public paidCumRewardsPerStake;
   mapping(address => mapping(address => uint256)) public paidCumTokenRewardsPerStake;
   mapping(address => uint256) public stakedBalance;
   address[] public rewardTokens;
   mapping(address => bool) public isApprovedRewardToken;
   mapping(address => Stakeholder) public stakeholderInfo;
   mapping(address => uint256) public lastStakeTime;
-  uint256 constant public SCALE = 1e8;
+  uint256 public SCALE = 1e40;
 
   event Stake(address addr, uint256 amount);
   event Withdrawal(address addr, uint256 amount);
   event RewardCollection(address token, address addr, uint256 amount);
+  event RewardAdded(address token, uint256 amount, uint256 rps, bool intern);
 
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
@@ -48,22 +48,23 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
     isApprovedRewardToken[_arbisToken] = true;
   }
 
-  function addReward(address token, uint256 reward) external nonReentrant {
-    _addReward(token, reward, false);
+  function addReward(address token, uint256 amount) external nonReentrant {
+    _addReward(token, amount, false);
   }
 
-  function _addReward(address token, uint256 reward, bool intern) private {
+  function _addReward(address token, uint256 amount, bool intern) private {
     require(isApprovedRewardToken[token], "Token is not approved for rewards");
     if (!intern) {
-      IERC20(token).safeTransferFrom(msg.sender, address(this), reward);
+      IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
     if (totalStaked == 0) {
       // Rewards which nobody is eligible for
-      excessTokenRewards[token] += reward;
+      excessTokenRewards[token] += amount;
       return;
     }
-    uint256 rewardPerStake = (reward * SCALE) / totalStaked;
+    uint256 rewardPerStake = (amount * SCALE) / totalStaked;
     totalCumTokenRewardsPerStake[token] += rewardPerStake;
+    emit RewardAdded(token, amount, rewardPerStake, intern);
   }
 
   function stake(uint256 amount) external nonReentrant {
@@ -152,7 +153,9 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
     uint256 owedPerUnitStake = totalCumTokenRewardsPerStake[token] - paidCumTokenRewardsPerStake[token][msg.sender];
     uint256 totalRewards = (stakedBalance[msg.sender] * owedPerUnitStake) / SCALE;
     paidCumTokenRewardsPerStake[token][msg.sender] = totalCumTokenRewardsPerStake[token];
-    IERC20(token).safeTransfer(msg.sender, totalRewards);
+    if (totalRewards > 0) {
+      IERC20(token).safeTransfer(msg.sender, totalRewards);
+    }
     emit RewardCollection(token, msg.sender, totalRewards);
   }
 
@@ -189,7 +192,11 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
 
   function withdrawExcessRewards() external onlyAdmin {
     for (uint256 i = 0; i < rewardTokens.length; i++) {
-      IERC20(rewardTokens[i]).safeTransfer(msg.sender, excessTokenRewards[rewardTokens[i]]);
+      uint256 amount = excessTokenRewards[rewardTokens[i]];
+      if (amount == 0) {
+        continue;
+      }
+      IERC20(rewardTokens[i]).safeTransfer(msg.sender, amount);
       excessTokenRewards[rewardTokens[i]] = 0;
     }
   }
@@ -207,6 +214,10 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
         isApprovedRewardToken[token] = false;
       }
     }
+  }
+
+  function setScale(uint256 _scale) external onlyAdmin {
+    SCALE = _scale;
   }
 
   function recoverEth() external onlyAdmin {

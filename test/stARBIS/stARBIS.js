@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const fs = require('fs');
 const { format } = require("path");
 
-const SCALE = 1e8;
+const SCALE = ethers.utils.parseUnits('1', 40);
 
 describe("stARBIS", async function () {
   let owner, addr1, addr2, addr3, addr4;
@@ -35,7 +35,8 @@ describe("stARBIS", async function () {
     [owner, ...accounts] = await ethers.getSigners();
 
     const TestToken = await ethers.getContractFactory("TestToken");
-    stakeToken = await TestToken.deploy();
+    const TestToken2 = await ethers.getContractFactory("TestToken2");
+    stakeToken = await TestToken2.deploy(ethers.utils.parseEther("500000000000")); // 500 billion
     weth = await TestToken.deploy();
     doge = await TestToken.deploy();
 
@@ -44,7 +45,7 @@ describe("stARBIS", async function () {
 
     // Transfer first five addresses some tokens
     for (let i = 0; i < 5; i++) {
-      await stakeToken.transfer(accounts[i].address, ethers.utils.parseEther("2000"));
+      await stakeToken.transfer(accounts[i].address, ethers.utils.parseEther("50000000000")); // 50 billion
       await doge.transfer(accounts[i].address, ethers.utils.parseEther("2000"));
       await weth.transfer(accounts[i].address, ethers.utils.parseEther("2000"));
     }
@@ -75,6 +76,23 @@ describe("stARBIS", async function () {
     await stARBIS.addReward(doge.address, amount);
     let dogeApproved = await stARBIS.isApprovedRewardToken(doge.address);
     expect(dogeApproved, "Token not approved").to.be.true;
+  });
+
+  it("Staking - big numbers", async function () {
+    let amount = ethers.utils.parseEther("22000000000");
+    // Stake large amount
+    await stakeToken.approve(stARBIS.address, amount);
+    await stARBIS.stake(amount);
+
+    // Add small reward
+    let small = ethers.utils.parseEther("0.2");
+    await weth.approve(stARBIS.address, small);
+    await stARBIS.addReward(weth.address, small);
+    
+    let before = await weth.balanceOf(owner.address);
+    await stARBIS.collectRewards();
+    let after = await weth.balanceOf(owner.address);
+    expect(after).to.be.closeTo(before.add(small), ethers.utils.parseEther("0.000001"));
   });
 
   it("Staking - token transfer", async function () {
@@ -223,11 +241,11 @@ describe("stARBIS", async function () {
     expect(wethAvail, "Incorrect WETH available").to.equal(amount2);
   });
 
-  it("Fees - earlyWithdrawal with fee - redistribution", async function () {
+  it("Fees - earlyWithdrawal with fee - subtraction on withdrawal", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE); // 5% of original amount
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.1', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.5', 40));
 
     let amount = ethers.utils.parseEther("150");
     let oldBal = await stakeToken.balanceOf(owner.address);
@@ -235,14 +253,14 @@ describe("stARBIS", async function () {
     await stARBIS.stake(amount);
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("45")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("15")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - receive", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.5*SCALE); // 50% of 30% fee is redistributed
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.5', 40));
     await stARBIS.setFeeDestination(accounts[3].address);
 
     let oldBal = await stakeToken.balanceOf(accounts[3].address);
@@ -254,30 +272,28 @@ describe("stARBIS", async function () {
 
 
     let newBal = await stakeToken.balanceOf(accounts[3].address);
-    expect(newBal, "Fee wasn't received").to.be.closeTo(oldBal.add(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.0001"));
+    expect(newBal, "Fee wasn't received").to.be.closeTo(oldBal.add(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - 1", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE); // 5% of original amount
-
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.16666', 40));
     let amount = ethers.utils.parseEther("150");
     let oldBal = await stakeToken.balanceOf(owner.address);
     await stakeToken.approve(stARBIS.address, amount);
     await stARBIS.stake(amount);
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("45")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("45")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - 2", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE); // 5% of original amount
-
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.16666', 40));
     let amount = ethers.utils.parseEther("150");
     let oldBal = await stakeToken.balanceOf(owner.address);
     await stakeToken.approve(stARBIS.address, amount);
@@ -291,14 +307,14 @@ describe("stARBIS", async function () {
     
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - 3", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE);
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.16666', 40));
 
     let amount = ethers.utils.parseEther("150");
     let oldBal = await stakeToken.balanceOf(owner.address);
@@ -313,15 +329,14 @@ describe("stARBIS", async function () {
     
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("11.25")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("11.25")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - 4", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE);
-
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.16666', 40));
     let amount = ethers.utils.parseEther("150");
     let oldBal = await stakeToken.balanceOf(owner.address);
     await stakeToken.approve(stARBIS.address, amount);
@@ -335,7 +350,7 @@ describe("stARBIS", async function () {
     
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("33.75")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("33.75")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - withdraw gas fee", async function () {
@@ -351,9 +366,8 @@ describe("stARBIS", async function () {
   it("Fees - earlyWithdrawal without fee", async function () {
     const sevenDays = 60 * 60 * 24 * 7;
     await stARBIS.setEarlyWithdrawalSecondsThreshold(sevenDays);
-    await stARBIS.setEarlyWithdrawalFee(0.3*SCALE);
-    await stARBIS.setEarlyWithdrawalDistributeShare(0.166666*SCALE);
-
+    await stARBIS.setEarlyWithdrawalFee(ethers.utils.parseUnits('0.3', 40));
+    await stARBIS.setEarlyWithdrawalDistributeShare(ethers.utils.parseUnits('0.166666', 40));
     let oldBal = await stakeToken.balanceOf(owner.address);
 
     // None of this should be eligible for fee
@@ -378,6 +392,17 @@ describe("stARBIS", async function () {
       stARBIS.connect(accounts[10]).grantRole(adminRole, accounts[10].address)
     ).to.be.revertedWith("is missing role 0x0000000000000000000000000000000000000000000000000000000000000000");
   });
+
+  it("setScale", async function () {
+    await stARBIS.setScale(10);
+    let scale = await stARBIS.SCALE();
+    expect(scale).to.equal(10);
+
+    await stARBIS.setScale(1000);
+    scale = await stARBIS.SCALE();
+    expect(scale).to.equal(1000);
+  });
+
 
   async function getRewardEventFromBlock(blockNumber, tokenAddress) {
     let eventFilter = stARBIS.filters.RewardCollection();
