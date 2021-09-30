@@ -946,7 +946,7 @@ contract ArbisETHLPFarmStrategy is ERC20, AccessControl, IStrategy {
     depositToken = IPair( 0x016069AaB59cB9E25c496c82988ad34f70E75Cbf);
     rewardToken = IERC20(0x9f20de1fc9b161b34089cbEAE888168B44b03461);//arbis
     rewardToken2 = IERC20(0xdE903E2712288A1dA82942DDdF2c20529565aC30);//swapr
-    stakingContract = IERC20StakingRewardsDistribution( 0xe2d2c4b36996fE100C54FB99313E5f602125FeA0);
+    stakingContract = IERC20StakingRewardsDistribution(  0x503C0AB69cb0d96C94DE7afFd2dA6cb108bA63DF);
     router = IRouter( 0x530476d5583724A89c8841eB6Da76E7Af4C0F17E);
 
     address _token0 = depositToken.token0();
