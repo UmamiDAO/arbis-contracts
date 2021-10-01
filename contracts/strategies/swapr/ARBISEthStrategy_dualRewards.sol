@@ -1,6 +1,3 @@
-/**
- *Submitted for verification at arbiscan.io on 2021-09-19
- */
 
 pragma solidity 0.8.9;
 
