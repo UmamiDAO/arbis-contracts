@@ -44,6 +44,7 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | SushiEscrow | [0xA135f3125867E5eFB48c66B6d0102790aFfEfa40](https://arbiscan.io/address/0xA135f3125867E5eFB48c66B6d0102790aFfEfa40)|
 | SushiSpellEscrow | [0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4](https://arbiscan.io/address/0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4) |
 | PPEGGEscrow | [0x2906c88ae542deda106cb3e8e65071f99dbe1a95](https://arbiscan.io/address/0x2906c88ae542deda106cb3e8e65071f99dbe1a95) |
+| HoneyEscrow | [0x989F625A4536f0710Be11e7292a9F5e0D562c233](https://arbiscan.io/address/0x989F625A4536f0710Be11e7292a9F5e0D562c233) |
 | Distributor | [0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB](https://arbiscan.io/address/0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB) |
 | Pipeline (current contract to trigger escrows and distrbutor) | [0x8b3b94B035FEE148E9d5955F025fCC2f2c57D3C9](https://arbiscan.io/address/0x8b3b94B035FEE148E9d5955F025fCC2f2c57D3C9) |
 | Receiver | [ 0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC](https://arbiscan.io/address/0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC) |
