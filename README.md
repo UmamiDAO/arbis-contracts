@@ -27,6 +27,7 @@ All contracts are unaudited, standard yield farming risks apply.
 | PPEGGUSDCStrategy | [0x8aec9a48EeEdc3b5Ce84773C03b1788406ecA989](https://arbiscan.io/address/0x8aec9a48EeEdc3b5Ce84773C03b1788406ecA989) |
 | HONEYETHStrategy | [0x9Ab60E8Db1fF7d1D18d03E8D821bd440C337D41C](https://arbiscan.io/address/0x9Ab60E8Db1fF7d1D18d03E8D821bd440C337D41C) |
 | HONEYUSDCStrategy | [0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d](https://arbiscan.io/address/0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d) |
+| HONEYADOGEStrategy | [0x1cC1554b76acc2968d6ECb15681E7e95C80B6266](https://arbiscan.io/address/0x1cC1554b76acc2968d6ECb15681E7e95C80B6266) |
 
 ### Factory Created Contract Addresses
 There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy instances), view it for source code and abi information
