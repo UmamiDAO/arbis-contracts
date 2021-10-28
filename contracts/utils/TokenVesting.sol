@@ -243,34 +243,6 @@ contract TokenVesting is Ownable {
   }
 
   /**
-   * @return the beneficiary of the tokens.
-   */
-  function beneficiary() public view returns(address) {
-    return _beneficiary;
-  }
-
-  /**
-   * @return the cliff time of the token vesting.
-   */
-  function cliff() public view returns(uint256) {
-    return _cliff;
-  }
-
-  /**
-   * @return the start time of the token vesting.
-   */
-  function start() public view returns(uint256) {
-    return _start;
-  }
-
-  /**
-   * @return the duration of the token vesting.
-   */
-  function duration() public view returns(uint256) {
-    return _duration;
-  }
-
-  /**
    * @return the amount of the token released.
    */
   function released(address token) public view returns(uint256) {
