@@ -295,6 +295,14 @@ contract TokenVesting is Ownable {
     _cliff = block.timestamp.add(cliffDuration);
     _start = block.timestamp;
   }
+  
+  function rescind(IERC20 token) public onlyOwner {
+      uint256 releasableNow = releasable(token);
+      uint256 toRescind = token.balanceOf(address(this)).sub(releasableNow);
+      token.safeTransfer(owner(), toRescind);
+      _duration = block.timestamp.sub(_start);
+      token.safeTransfer(_beneficiary, releasableNow);
+  }
 
   /**
    * @return the beneficiary of the tokens.
