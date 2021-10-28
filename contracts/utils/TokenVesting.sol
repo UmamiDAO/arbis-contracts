@@ -195,11 +195,11 @@ contract TokenVesting is Ownable {
   event TokensReleased(address token, uint256 amount);
 
   // beneficiary of tokens after they are released
-  address private _beneficiary;
+  address public _beneficiary;
 
-  uint256 private _cliff;
-  uint256 private _start;
-  uint256 private _duration;
+  uint256 public _cliff;
+  uint256 public _start;
+  uint256 public _duration;
 
   mapping (address => uint256) private _released;
   /**
