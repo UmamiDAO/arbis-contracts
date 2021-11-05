@@ -53,8 +53,8 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | Receiver(old) | [ 0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC](https://arbiscan.io/address/0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC) |
 | Receiver(current one distributor goes to) | [ 0xa3bf87488c1257f8dd555b3df85cd0546074d93b](https://arbiscan.io/address/0xa3bf87488c1257f8dd555b3df85cd0546074d93b) |
 | Gnosis Safe | [ 0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA](https://arbiscan.io/address/0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA) |
-| st ARBIS/ETH LP | [ 0xEf1F3f33F5f09A6bfDeE4FC7f226409F19276F16](https://arbiscan.io/address/0xEf1F3f33F5f09A6bfDeE4FC7f226409F19276F16) |
-| st ARBIS/ETH LP Receiver | [ 0x429ede962C052c92139c05dED2a10FBc324975Bb](https://arbiscan.io/address/0x429ede962C052c92139c05dED2a10FBc324975Bb) |
+| st ARBIS/ETH LP | [0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De](https://arbiscan.io/address/ 0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De) |
+| st ARBIS/ETH LP Receiver | [0x26804Fdd4d4d893686233f8399174F2D2a785308](https://arbiscan.io/address/ 0x26804Fdd4d4d893686233f8399174F2D2a785308) |
 
 
 ## Arbis Rewards farms
