@@ -251,7 +251,7 @@ describe("stARBIS", async function () {
 
 
     let newBal = await stakeToken.balanceOf(accounts[3].address);
-    expect(newBal, "Fee wasn't received").to.be.closeTo(oldBal.add(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.0001"));
+    expect(newBal, "Fee wasn't received").to.be.closeTo(oldBal.add(ethers.utils.parseEther("22.5")), ethers.utils.parseEther("0.01"));
   });
 
   it("Fees - earlyWithdrawal with fee - 1", async function () {
@@ -266,7 +266,7 @@ describe("stARBIS", async function () {
     await stARBIS.stake(amount);
     await stARBIS.withdraw(amount);
     let newBal = await stakeToken.balanceOf(owner.address);
-    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("45")), ethers.utils.parseEther("0.01"));
+    expect(newBal, "Expected fee wasn't taken").to.be.closeTo(oldBal.sub(ethers.utils.parseEther("45")), ethers.utils.parseEther("0.1"));
   });
 
   it("Fees - earlyWithdrawal with fee - 2", async function () {

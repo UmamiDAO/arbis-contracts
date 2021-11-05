@@ -66,7 +66,28 @@ task("deploy-sushi-farm", "Deploys a new Sushi farm strategy")
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: {
+   compilers: [
+    {
+      version: "0.8.1"
+    }, 
+    {
+      version: "0.8.4"
+    }, 
+    {
+      version: "0.8.7"
+    }, 
+    {
+      version: "0.8.9"
+    },
+   ],
+   settings: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
+  }
+  },
   "defaultNetwork": "localhost",
   networks: {
     hardhat: {
