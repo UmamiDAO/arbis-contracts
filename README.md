@@ -55,6 +55,7 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | Gnosis Safe | [ 0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA](https://arbiscan.io/address/0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA) |
 | st ARBIS/ETH LP | [0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De](https://arbiscan.io/address/0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De) |
 | st ARBIS/ETH LP Receiver | [0x26804Fdd4d4d893686233f8399174F2D2a785308](https://arbiscan.io/address/0x26804Fdd4d4d893686233f8399174F2D2a785308) |
+| wsZ2O | [0x30f8627373634967F692c949092281Cf8Fb0327A](https://arbiscan.io/address/0x30f8627373634967F692c949092281Cf8Fb0327A) |
 
 
 ## Arbis Rewards farms
