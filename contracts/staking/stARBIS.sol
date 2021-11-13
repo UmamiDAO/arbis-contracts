@@ -25,7 +25,7 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
   mapping(address => bool) public isApprovedRewardToken;
   mapping(address => Stakeholder) public stakeholderInfo;
   mapping(address => uint256) public lastStakeTime;
-  uint256 public SCALE = 1e40;
+  uint256 constant public SCALE = 1e40;
 
   event Stake(address addr, uint256 amount);
   event Withdrawal(address addr, uint256 amount);
@@ -41,7 +41,7 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
 
   constructor(
       address _arbisToken
-    ) ERC20("Staked ARBIS", "stARBIS") {
+    ) ERC20("Staked ARBIS/ETH LP", "stARBIS/ETH") {
     arbisToken = IERC20(_arbisToken);
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     rewardTokens.push(_arbisToken);
@@ -62,7 +62,12 @@ contract stARBIS is ERC20, AccessControl, ReentrancyGuard {
       excessTokenRewards[token] += amount;
       return;
     }
+<<<<<<< HEAD
     uint256 rewardPerStake = (amount * SCALE) / totalStaked;
+=======
+    uint256 rewardPerStake = (reward * SCALE) / totalStaked;
+    require(rewardPerStake > 0, "insufficient reward per stake");
+>>>>>>> 82749462705b1a56d0ee666287352e3fdfd1c284
     totalCumTokenRewardsPerStake[token] += rewardPerStake;
     emit RewardAdded(token, amount, rewardPerStake, intern);
   }

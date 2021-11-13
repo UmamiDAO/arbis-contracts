@@ -25,6 +25,10 @@ All contracts are unaudited, standard yield farming risks apply.
 | PPEGGStrategy | [0x485E17A5B692134Db279792054c6CC0B72bd183D](https://arbiscan.io/address/0x485E17A5B692134Db279792054c6CC0B72bd183D) |
 | PPEGGETHStrategy | [0x60ae12B7999c5cED1c57230D2040fD1e5CAb3cF5](https://arbiscan.io/address/0x60ae12B7999c5cED1c57230D2040fD1e5CAb3cF5) |
 | PPEGGUSDCStrategy | [0x8aec9a48EeEdc3b5Ce84773C03b1788406ecA989](https://arbiscan.io/address/0x8aec9a48EeEdc3b5Ce84773C03b1788406ecA989) |
+| HONEYETHStrategy | [0x9Ab60E8Db1fF7d1D18d03E8D821bd440C337D41C](https://arbiscan.io/address/0x9Ab60E8Db1fF7d1D18d03E8D821bd440C337D41C) |
+| HONEYUSDCStrategy | [0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d](https://arbiscan.io/address/0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d) |
+| HONEYADOGEStrategy | [0x1cC1554b76acc2968d6ECb15681E7e95C80B6266](https://arbiscan.io/address/0x1cC1554b76acc2968d6ECb15681E7e95C80B6266) |
+| ARBISETHSwaprLPEpoch4Strategy | [0x91373b367b8b0Ae581145094367C2Ba357B6A7E2](https://arbiscan.io/address/0x91373b367b8b0Ae581145094367C2Ba357B6A7E2) |
 
 ### Factory Created Contract Addresses
 There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy instances), view it for source code and abi information
@@ -38,11 +42,23 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | Name | Address |
 | --- | --- |
 | ARBIS | [0x9f20de1fc9b161b34089cbeae888168b44b03461](https://arbiscan.io/token/0x9f20de1fc9b161b34089cbeae888168b44b03461) 
-| stARBIS | [0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d](https://arbiscan.io/address/0x7093e0280769C71b09a3Db57FF1665b8B29d3a3d)|
+| stARBIS | [0xBf00759D7E329d7A7fa1D4DCdC914C53d1d2db86](https://arbiscan.io/address/0xBf00759D7E329d7A7fa1D4DCdC914C53d1d2db86)|
 | NyanEscrow| [0xce789f111A51599c9908039Fb922e0945AB555be](https://arbiscan.io/address/0xce789f111A51599c9908039Fb922e0945AB555be)|
 | SushiEscrow | [0xA135f3125867E5eFB48c66B6d0102790aFfEfa40](https://arbiscan.io/address/0xA135f3125867E5eFB48c66B6d0102790aFfEfa40)|
 | SushiSpellEscrow | [0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4](https://arbiscan.io/address/0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4) |
 | PPEGGEscrow | [0x2906c88ae542deda106cb3e8e65071f99dbe1a95](https://arbiscan.io/address/0x2906c88ae542deda106cb3e8e65071f99dbe1a95) |
+| HoneyEscrow | [0x989F625A4536f0710Be11e7292a9F5e0D562c233](https://arbiscan.io/address/0x989F625A4536f0710Be11e7292a9F5e0D562c233) |
 | Distributor | [0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB](https://arbiscan.io/address/0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB) |
 | Pipeline (current contract to trigger escrows and distrbutor) | [0x8b3b94B035FEE148E9d5955F025fCC2f2c57D3C9](https://arbiscan.io/address/0x8b3b94B035FEE148E9d5955F025fCC2f2c57D3C9) |
-| Receiver | [ 0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC](https://arbiscan.io/address/0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC) |
+| Receiver(old) | [ 0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC](https://arbiscan.io/address/0xb5F6F3D4Ca445E382d966312dAbB7431D6B1c0dC) |
+| Receiver(current one distributor goes to) | [ 0xa3bf87488c1257f8dd555b3df85cd0546074d93b](https://arbiscan.io/address/0xa3bf87488c1257f8dd555b3df85cd0546074d93b) |
+| Gnosis Safe | [ 0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA](https://arbiscan.io/address/0xB0B4bd94D656353a30773Ac883591DDBaBC0c0bA) |
+| st ARBIS/ETH LP | [0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De](https://arbiscan.io/address/0x1eC62f8367ad3FF61c3F3b0ab1d0297A539062De) |
+| st ARBIS/ETH LP Receiver | [0x26804Fdd4d4d893686233f8399174F2D2a785308](https://arbiscan.io/address/0x26804Fdd4d4d893686233f8399174F2D2a785308) |
+| wsZ2O | [0x30f8627373634967F692c949092281Cf8Fb0327A](https://arbiscan.io/address/0x30f8627373634967F692c949092281Cf8Fb0327A) |
+
+
+## Arbis Rewards farms
+| Name | Address | Total Allocated |
+| --- | --- | -- |
+| SPELL/ETH | [0xaAfb614B238Bf003D35C97C4f46503E164006AD2](https://arbiscan.io/address/0xaAfb614B238Bf003D35C97C4f46503E164006AD2) | 406m ARBIS |
