@@ -12,7 +12,7 @@ contract Distributor is AccessControl, ReentrancyGuard {
   uint256[] public shares;
   address[] public distributedTokens;
   mapping(address => bool) public isDistributedToken;
-  uint256 public immutable SCALE = 1e8;
+  uint256 public immutable SCALE = 1e40;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
   string public name;
 

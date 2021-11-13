@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "contracts/staking/stARBIS.sol";
 
 contract stARBISReceiver is AccessControl, ReentrancyGuard {
-  stARBIS public immutable stARBISContract;
+  stARBIS public stARBISContract;
   address[] public distributedTokens;
   mapping(address => bool) public isDistributedToken;
   bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -44,6 +44,10 @@ contract stARBISReceiver is AccessControl, ReentrancyGuard {
         isDistributedToken[token] = false;
       }
     }
+  }
+
+  function setStArbisAddress(address st) external onlyAdmin {
+    stARBISContract = stARBIS(st);
   }
 
   function recoverEth() external onlyAdmin {
