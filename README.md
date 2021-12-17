@@ -29,6 +29,7 @@ All contracts are unaudited, standard yield farming risks apply.
 | HONEYUSDCStrategy | [0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d](https://arbiscan.io/address/0xE91713DB2FabfeF98A882dE9bB7c583B5EBAe18d) |
 | HONEYADOGEStrategy | [0x1cC1554b76acc2968d6ECb15681E7e95C80B6266](https://arbiscan.io/address/0x1cC1554b76acc2968d6ECb15681E7e95C80B6266) |
 | ARBISETHSwaprLPEpoch4Strategy | [0x91373b367b8b0Ae581145094367C2Ba357B6A7E2](https://arbiscan.io/address/0x91373b367b8b0Ae581145094367C2Ba357B6A7E2) |
+| gOHMETHLPStrategy | [0x5Ec477EdA75303450a4185B3557c2C2fbb85A9fC](https://arbiscan.io/address/0x5Ec477EdA75303450a4185B3557c2C2fbb85A9fC) |
 
 ### Factory Created Contract Addresses
 There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy instances), view it for source code and abi information
@@ -46,6 +47,7 @@ There addresss are created by SushiLPFarmStrategyFactory (as SushiLPFarmStrategy
 | NyanEscrow| [0xce789f111A51599c9908039Fb922e0945AB555be](https://arbiscan.io/address/0xce789f111A51599c9908039Fb922e0945AB555be)|
 | SushiEscrow | [0xA135f3125867E5eFB48c66B6d0102790aFfEfa40](https://arbiscan.io/address/0xA135f3125867E5eFB48c66B6d0102790aFfEfa40)|
 | SushiSpellEscrow | [0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4](https://arbiscan.io/address/0x20040D11Fe3baE1AD0F23ac8958faf370F5CFcf4) |
+| SushigOHMEscrow | [0xAa366bEB7F46F69c8546B81282ef39Ba142ac6FF](https://arbiscan.io/address/0xAa366bEB7F46F69c8546B81282ef39Ba142ac6FF) |
 | PPEGGEscrow | [0x2906c88ae542deda106cb3e8e65071f99dbe1a95](https://arbiscan.io/address/0x2906c88ae542deda106cb3e8e65071f99dbe1a95) |
 | HoneyEscrow | [0x989F625A4536f0710Be11e7292a9F5e0D562c233](https://arbiscan.io/address/0x989F625A4536f0710Be11e7292a9F5e0D562c233) |
 | Distributor | [0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB](https://arbiscan.io/address/0x14897d1510F60640f7C2E5a3eEA48f21EDDD40dB) |
